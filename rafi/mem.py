@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import mem
+class Memory:
+    "Memory emulation class"
 
-def RunEmulation(args):
-    memory = mem.Memory()
-    memory.load(args.file)
+    CAPACITY = 64 * 1024
 
-    for cycle in range(args.cycle):
-        addr = cycle * 4
-        print(f"{memory.read_uint32(addr):08x}")
+    data = bytearray(CAPACITY)
+
+    def load(self, path):
+        with open(path, mode='rb') as f:
+            data = f.read()
+            if len(data) > len(self.data):
+                raise Exception(f"Size of '{path}' ({len(data)}) is larger than memory size ({len(self.data)}).")
+            self.data[0:len(data)] = data[0:len(data)]
+
+    def read_uint32(self, addr):
+        return int.from_bytes(self.data[addr:addr+4], byteorder='little', signed=False)

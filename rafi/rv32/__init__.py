@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from . import rv32i
+from . import util
 
-def Decode(insn):
+def decode(insn):
     return rv32i.UnknownOp()

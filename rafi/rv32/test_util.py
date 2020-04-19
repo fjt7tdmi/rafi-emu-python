@@ -15,15 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import rafi
+import util
+import unittest
 
-DefaultCycle = 100
+class TestUtil(unittest.TestCase):
+    def test_pick(self):
+        self.assertEqual(0x34, util.pick(0x12345678, 16, 8))
 
-parser = argparse.ArgumentParser(description="Toy RISCV emulator by Python.")
-parser.add_argument('file', help="Binary file to load")
-parser.add_argument('-c', '--cycle', default=DefaultCycle, help="Number of emulation cycles.")
+    def test_sign_extend(self):
+        self.assertEqual(0xffff8888, util.sign_extend32(16, 0xfff08888))
+        self.assertEqual(0x00008888, util.sign_extend32(17, 0xfff08888))
 
-args = parser.parse_args()
+    def test_zero_extend(self):
+        self.assertEqual(0x00008888, util.zero_extend32(16, 0xfff08888))
+        self.assertEqual(0x00008888, util.zero_extend32(17, 0xfff08888))
 
-rafi.RunEmulation(args)
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

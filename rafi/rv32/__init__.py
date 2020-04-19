@@ -15,5 +15,9 @@
 from . import rv32i
 from . import util
 
+class UnknownOp:
+    def __str__(self):
+        return "Unknown"
+
 def decode(insn):
-    return rv32i.UnknownOp()
+    return UnknownOp()

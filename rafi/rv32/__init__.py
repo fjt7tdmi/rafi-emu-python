@@ -12,15 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import mem
-from . import rv32
+from . import rv32i
 
-def RunEmulation(args):
-    memory = mem.Memory()
-    memory.load(args.file)
-
-    for cycle in range(args.cycle):
-        addr = cycle * 4
-        insn = memory.read_uint32(addr)
-        op = rv32.Decode(insn)
-        print(f"{insn:08x} {op}")
+def Decode(insn):
+    return rv32i.UnknownOp()

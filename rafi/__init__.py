@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import rafi
-
-DefaultCycle = 100
-
-parser = argparse.ArgumentParser(description="Toy RISCV emulator by Python.")
-parser.add_argument('file', help="Binary file to load")
-parser.add_argument('-c', '--cycle', default=DefaultCycle, help="Number of emulation cycles.")
-
-args = parser.parse_args()
-
-rafi.RunEmulation(args)
+def RunEmulation(args):
+    print(args.file)
+    print(args.cycle)

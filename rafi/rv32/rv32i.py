@@ -539,7 +539,7 @@ class CSRRC:
             return f"csrrc {rd},{csr},{rs1}"
 
 class CSRRWI:
-    def __init__(self, csr, rd, rs1):
+    def __init__(self, csr, rd, zimm):
         self.csr = csr
         self.rd = rd
         self.zimm = zimm

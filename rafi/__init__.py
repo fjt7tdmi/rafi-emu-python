@@ -12,9 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from fixedint import *
+
 from . import mem
 from . import rv32i
 from . import util
+
+# =============================================================================
+# CPU State
+#
+class IntReg32:
+    __values = [UInt32(0)] * 32
+
+    def __getitem__(self, key):
+        return __values[int(key)]
+
+    def __setitem__(self, key, value):
+        if int(key) != 0:
+            __values[int(key)] = value
+
+class Csr32:
+    __values = [UInt32(0)] * 0x1000
+
+    def __getitem__(self, key):
+        return __values[int(key)]
+
+    def __setitem__(self, key, value):
+        __values[int(key)] = value
+
+class CpuState:
+    int_reg = IntReg32()
+    csr = Csr32()
 
 # =============================================================================
 # Decoder

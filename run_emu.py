@@ -26,4 +26,4 @@ parser.add_argument('-c', '--cycle', default=DefaultCycle, help="Number of emula
 
 args = parser.parse_args()
 
-rafi.RunEmulation(args)
+rafi.run_emulation(args)

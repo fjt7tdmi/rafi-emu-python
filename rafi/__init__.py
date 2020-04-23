@@ -25,22 +25,24 @@ class IntReg32:
     __values = [UInt32(0)] * 32
 
     def __getitem__(self, key):
-        return __values[int(key)]
+        return self.__values[int(key)]
 
     def __setitem__(self, key, value):
         if int(key) != 0:
-            __values[int(key)] = value
+            self.__values[int(key)] = value
 
 class Csr32:
     __values = [UInt32(0)] * 0x1000
 
     def __getitem__(self, key):
-        return __values[int(key)]
+        return self.__values[int(key)]
 
     def __setitem__(self, key, value):
-        __values[int(key)] = value
+        self.__values[int(key)] = value
 
 class CpuState:
+    pc = UInt32(0)
+    next_pc = UInt32(0)
     int_reg = IntReg32()
     csr = Csr32()
 
@@ -91,12 +93,12 @@ class OperandB:
 
 class OperandU:
     def __init__(self, insn):
-        self.imm =      util.pick(insn, 12, 20) << 12,
+        self.imm =      util.pick(insn, 12, 20) << 12
         self.rd =       util.pick(insn, 7, 5)
 
 class OperandJ:
     def __init__(self, insn):
-        self.imm =      util.pick(insn, 31) << 20 | util.pick(insn, 21, 10) << 1 | util.pick(insn, 20) << 11 | util.pick(insn, 12, 8) << 12,
+        self.imm =      util.sign_extend32(21, util.pick(insn, 31) << 20 | util.pick(insn, 21, 10) << 1 | util.pick(insn, 20) << 11 | util.pick(insn, 12, 8) << 12)
         self.rd =       util.pick(insn, 7, 5)
 
 def decode(insn):
@@ -243,11 +245,14 @@ def decode(insn):
 #
 
 def run_emulation(args):
+    cpuState = CpuState()
     memory = mem.Memory()
     memory.load(args.file)
 
-    for cycle in range(args.cycle):
-        addr = cycle * 4
-        insn = memory.read_uint32(addr)
+    for cycle in range(int(args.cycle)):
+        insn = memory.read_uint32(cpuState.pc)
+        cpuState.next_pc = cpuState.pc + 4
         op = decode(insn)
-        print(f"{insn:08x} {op}")
+        print(f"{cpuState.pc:08x} {op}")
+        op.execute(cpuState, memory)
+        cpuState.pc = cpuState.next_pc

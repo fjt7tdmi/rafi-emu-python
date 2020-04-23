@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from fixedint import *
+
 INT_REG_NAMES = [
     "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
     "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -217,10 +219,10 @@ def sign_extend(width, value, max_width):
         return value | (all_one - mask)
 
 def sign_extend32(width, value):
-    return sign_extend(width, value, 32)
+    return UInt32(sign_extend(width, value, 32))
 
 def sign_extend64(width, value):
-    return sign_extend(width, value, 64)
+    return UInt64(sign_extend(width, value, 64))
 
 def zero_extend(width, value):
     if width < 0:
@@ -234,8 +236,8 @@ def zero_extend(width, value):
     return value & mask
 
 def zero_extend32(width, value):
-    return zero_extend(width, value)
+    return UInt32(zero_extend(width, value))
 
 def zero_extend64(width, value):
-    return zero_extend(width, value)
+    return UInt64(zero_extend(width, value))
 

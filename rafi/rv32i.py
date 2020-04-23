@@ -12,9 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from fixedint import *
 from . import util
 
-class LUI:
+class Op:
+    def execute(self, cpuState, bus):
+        pass
+
+class LUI(Op):
     def __init__(self, rd, imm):
         self.rd = rd
         self.imm = imm
@@ -24,7 +29,11 @@ class LUI:
         imm = self.imm
         return f"lui {rd},{imm}"
 
-class AUIPC:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = self.imm
+
+class AUIPC(Op):
     def __init__(self, rd, imm):
         self.rd = rd
         self.imm = imm
@@ -34,7 +43,11 @@ class AUIPC:
         imm = self.imm
         return f"auipc {rd},{imm}"
 
-class JAL:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = cpuState.pc + self.imm
+
+class JAL(Op):
     def __init__(self, rd, imm):
         self.rd = rd
         self.imm = imm
@@ -43,8 +56,15 @@ class JAL:
         rd = util.INT_REG_NAMES[self.rd]
         imm = self.imm
         return f"jal {rd},{imm}"
+    
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        next_pc = cpuState.next_pc
 
-class JALR:
+        cpuState.next_pc = cpuState.pc + self.imm
+        x[self.rd] = next_pc
+
+class JALR(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -55,7 +75,14 @@ class JALR:
         imm = self.imm
         return f"jalr {rd},{imm}"
 
-class BEQ:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg[self.rd]
+        next_pc = cpuState.next_pc
+
+        cpuState.next_pc = x[self.rs1] + self.imm
+        x[self.rd] = next_pc
+
+class BEQ(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -72,7 +99,13 @@ class BEQ:
         else:
             return f"beq {rs1}, {rs2}, #{imm}"
 
-class BNE:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+
+        if x[self.rs1] == x[self.rs2]:
+            cpuState.next_pc = cpuState.pc + self.imm
+
+class BNE(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -89,7 +122,13 @@ class BNE:
         else:
             return f"bne {rs1}, {rs2}, #{imm}"
 
-class BLT:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+
+        if x[self.rs1] != x[self.rs2]:
+            cpuState.next_pc = cpuState.pc + self.imm
+
+class BLT(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -106,7 +145,13 @@ class BLT:
         else:
             return f"blt {rs1}, {rs2}, #{imm}"
 
-class BGE:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+
+        if Int32(x[self.rs1]) < Int32(x[self.rs2]):
+            cpuState.next_pc = cpuState.pc + self.imm
+
+class BGE(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -123,7 +168,13 @@ class BGE:
         else:
             return f"bge {rs1}, {rs2}, #{imm}"
 
-class BLTU:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+
+        if Int32(x[self.rs1]) >= Int32(x[self.rs2]):
+            cpuState.next_pc = cpuState.pc + self.imm
+
+class BLTU(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -135,7 +186,13 @@ class BLTU:
         imm = self.imm
         return f"bltu {rs1}, {rs2}, #{imm}"
 
-class BGEU:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+
+        if x[self.rs1] < x[self.rs2]:
+            cpuState.next_pc = cpuState.pc + self.imm
+
+class BGEU(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -147,7 +204,13 @@ class BGEU:
         imm = self.imm
         return f"bgeu {rs1}, {rs2}, #{imm}"
 
-class LB:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+
+        if x[self.rs1] >= x[self.rs2]:
+            cpuState.next_pc = cpuState.pc + self.imm
+
+class LB(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -159,7 +222,14 @@ class LB:
         imm = self.imm
         return f"lb {rd},{imm}({rs1})"
 
-class LH:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = bus.read_uint8(addr)
+
+        x[self.rd] = util.sign_extend32(8, value)
+
+class LH(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -171,7 +241,14 @@ class LH:
         imm = self.imm
         return f"lh {rd},{imm}({rs1})"
 
-class LW:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = bus.read_uint16(addr)
+
+        x[self.rd] = util.sign_extend32(16, value)
+
+class LW(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -183,7 +260,14 @@ class LW:
         imm = self.imm
         return f"lw {rd},{imm}({rs1})"
 
-class LBU:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = bus.read_uint32(addr)
+
+        x[self.rd] = value
+
+class LBU(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -195,7 +279,14 @@ class LBU:
         imm = self.imm
         return f"lbu {rd},{imm}({rs1})"
 
-class LHU:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = bus.read_uint8(addr)
+
+        x[self.rd] = util.zero_extend32(8, value)
+
+class LHU(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -207,7 +298,14 @@ class LHU:
         imm = self.imm
         return f"lhu {rd},{imm}({rs1})"
 
-class SB:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = bus.read_uint16(addr)
+
+        x[self.rd] = util.zero_extend32(16, value)
+
+class SB(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -219,7 +317,14 @@ class SB:
         imm = self.imm
         return f"sb {rs2},{imm}({rs1})"
 
-class SH:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = x[self.rs2]
+        
+        bus.write_uint8(addr, value)
+
+class SH(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -231,7 +336,14 @@ class SH:
         imm = self.imm
         return f"sh {rs2},{imm}({rs1})"
 
-class SW:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = x[self.rs2]
+        
+        bus.write_uint16(addr, value)
+
+class SW(Op):
     def __init__(self, rs1, rs2, imm):
         self.rs1 = rs1
         self.rs2 = rs2
@@ -243,7 +355,14 @@ class SW:
         imm = self.imm
         return f"sw {rs2},{imm}({rs1})"
 
-class ADDI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        addr = x[self.rs1] + self.imm
+        value = x[self.rs2]
+        
+        bus.write_uint32(addr, value)
+
+class ADDI(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -255,7 +374,11 @@ class ADDI:
         imm = self.imm
         return f"addi {rd},{rs1},{imm}"
 
-class SLTI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] + self.imm
+
+class SLTI(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -267,7 +390,11 @@ class SLTI:
         imm = self.imm
         return f"slti {rd},{rs1},{imm}"
 
-class SLTIU:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = UInt32(1) if Int32(x[self.rs1]) < Int32(self.imm) else UInt32(0)
+
+class SLTIU(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -279,7 +406,11 @@ class SLTIU:
         imm = self.imm
         return f"slti {rd},{rs1},{imm}"
 
-class XORI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = UInt32(1) if x[self.rs1] < self.imm else UInt32(0)
+
+class XORI(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -291,7 +422,11 @@ class XORI:
         imm = self.imm
         return f"xori {rd},{rs1},{imm}"
 
-class ORI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] ^ self.imm
+
+class ORI(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -303,7 +438,11 @@ class ORI:
         imm = self.imm
         return f"ori {rd},{rs1},{imm}"
 
-class ANDI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] | self.imm
+
+class ANDI(Op):
     def __init__(self, rd, rs1, imm):
         self.rd = rd
         self.rs1 = rs1
@@ -315,7 +454,11 @@ class ANDI:
         imm = self.imm
         return f"andi {rd},{rs1},{imm}"
 
-class SLLI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] & self.imm
+
+class SLLI(Op):
     def __init__(self, rd, rs1, shamt):
         self.rd = rd
         self.rs1 = rs1
@@ -327,7 +470,11 @@ class SLLI:
         shamt = self.shamt
         return f"slli {rd},{rs1},0x{shamt:x}"
 
-class SRLI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] << self.shamt
+
+class SRLI(Op):
     def __init__(self, rd, rs1, shamt):
         self.rd = rd
         self.rs1 = rs1
@@ -339,7 +486,11 @@ class SRLI:
         shamt = self.shamt
         return f"srli {rd},{rs1},0x{shamt:x}"
 
-class SRAI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] >> self.shamt
+
+class SRAI(Op):
     def __init__(self, rd, rs1, shamt):
         self.rd = rd
         self.rs1 = rs1
@@ -351,7 +502,11 @@ class SRAI:
         shamt = self.shamt
         return f"srai {rd},{rs1},0x{shamt:x}"
 
-class ADD:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = UInt32(Int32(x[self.rs1]) >> self.shamt)
+
+class ADD(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -363,7 +518,11 @@ class ADD:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"add {rd},{rs1},{rs2}"
 
-class SUB:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] + x[self.rs2]
+
+class SUB(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -375,7 +534,11 @@ class SUB:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"sub {rd},{rs1},{rs2}"
 
-class SLL:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] - x[self.rs2]
+
+class SLL(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -387,7 +550,11 @@ class SLL:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"sll {rd},{rs1},{rs2}"
 
-class SLT:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] << x[self.rs2]
+
+class SLT(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -399,7 +566,11 @@ class SLT:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"slt {rd},{rs1},{rs2}"
 
-class SLTU:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = UInt32(1) if Int32(x[self.rs1]) < Int32(x[self.rs2]) else UInt32(0)
+
+class SLTU(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -411,7 +582,11 @@ class SLTU:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"sltu {rd},{rs1},{rs2}"
 
-class XOR:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = UInt32(1) if x[self.rs1] < x[self.rs2] else UInt32(0)
+
+class XOR(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -423,7 +598,11 @@ class XOR:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"xor {rd},{rs1},{rs2}"
 
-class SRL:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] ^ x[self.rs2]
+
+class SRL(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -435,7 +614,11 @@ class SRL:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"srl {rd},{rs1},{rs2}"
 
-class SRA:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] >> x[self.rs2]
+
+class SRA(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -447,7 +630,11 @@ class SRA:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"sra {rd},{rs1},{rs2}"
 
-class OR:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = UInt32(Int32(x[self.rs1]) >> Int32(x[self.rs2]))
+
+class OR(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -459,7 +646,11 @@ class OR:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"or {rd},{rs1},{rs2}"
 
-class AND:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] | x[self.rs2]
+
+class AND(Op):
     def __init__(self, rd, rs1, rs2):
         self.rd = rd
         self.rs1 = rs1
@@ -471,7 +662,11 @@ class AND:
         rs2 = util.INT_REG_NAMES[self.rs2]
         return f"and {rd},{rs1},{rs2}"
 
-class FENCE:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        x[self.rd] = x[self.rs1] & x[self.rs2]
+
+class FENCE(Op):
     def __init__(self, pred, succ):
         self.pred = pred
         self.succ = succ
@@ -479,19 +674,19 @@ class FENCE:
     def __str__(self):
         return "fence"
 
-class FENCE_I:
+class FENCE_I(Op):
     def __str__(self):
         return "fence.i"
 
-class ECALL:
+class ECALL(Op):
     def __str__(self):
         return "ecall"
 
-class EBREAK:
+class EBREAK(Op):
     def __str__(self):
         return "ebreak"
 
-class CSRRW:
+class CSRRW(Op):
     def __init__(self, csr, rd, rs1):
         self.csr = csr
         self.rd = rd
@@ -506,7 +701,15 @@ class CSRRW:
         else:
             return f"csrrw {rd},{csr},{rs1}"
 
-class CSRRS:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        csr = cpuState.csr
+        value = csr[self.csr]
+
+        csr[self.csr] = x[self.rs1]
+        x[self.rd] = value
+
+class CSRRS(Op):
     def __init__(self, csr, rd, rs1):
         self.csr = csr
         self.rd = rd
@@ -523,7 +726,15 @@ class CSRRS:
         else:
             return f"csrrs {rd},{csr},{rs1}"
 
-class CSRRC:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        csr = cpuState.csr
+        value = csr[self.csr]
+
+        csr[self.csr] = value | x[self.rs1]
+        x[self.rd] = value
+
+class CSRRC(Op):
     def __init__(self, csr, rd, rs1):
         self.csr = csr
         self.rd = rd
@@ -538,7 +749,14 @@ class CSRRC:
         else:
             return f"csrrc {rd},{csr},{rs1}"
 
-class CSRRWI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        value = cpuState.csr[self.csr]
+
+        cpuState.csr[self.csr] = ~value & x[self.rs1]
+        x[self.rd] = value
+
+class CSRRWI(Op):
     def __init__(self, csr, rd, zimm):
         self.csr = csr
         self.rd = rd
@@ -553,7 +771,15 @@ class CSRRWI:
         else:
             return f"csrrwi {rd},{csr},{zimm}"
 
-class CSRRSI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        csr = cpuState.csr
+
+        value = csr[self.csr]
+        csr[self.csr] = self.zimm
+        x[self.rd] = value
+
+class CSRRSI(Op):
     def __init__(self, csr, rd, rs1):
         self.csr = csr
         self.rd = rd
@@ -568,7 +794,15 @@ class CSRRSI:
         else:
             return f"csrrsi {rd},{csr},{zimm}"
 
-class CSRRCI:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        csr = cpuState.csr
+
+        value = csr[self.csr]
+        csr[self.csr] = value | self.zimm
+        x[self.rd] = value
+
+class CSRRCI(Op):
     def __init__(self, csr, rd, rs1):
         self.csr = csr
         self.rd = rd
@@ -583,23 +817,31 @@ class CSRRCI:
         else:
             return f"csrrci {rd},{csr},{zimm}"
 
-class URET:
+    def execute(self, cpuState, bus):
+        x = cpuState.int_reg
+        csr = cpuState.csr
+
+        value = csr[self.csr]
+        csr[self.csr] = ~value & self.zimm
+        x[self.rd] = value
+
+class URET(Op):
     def __str__(self):
         return "uret"
 
-class SRET:
+class SRET(Op):
     def __str__(self):
         return "sret"
 
-class MRET:
+class MRET(Op):
     def __str__(self):
         return "mret"
 
-class WFI:
+class WFI(Op):
     def __str__(self):
         return "wfi"
 
-class SFENCE_VMA:
+class SFENCE_VMA(Op):
     def __init__(self, rs1, rs2):
         self.rs1 = rs1
         self.rs2 = rs2

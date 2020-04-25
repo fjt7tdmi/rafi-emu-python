@@ -15,15 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+import json
+import os
 import rafi
+import sys
 
-DefaultCycle = 100
+CONFIG_PATH = "./riscv_tests.json"
+BINARY_DIR_PATH = "./rafi-prebuilt-binary/riscv-tests/isa"
+MAX_CYCLE = 10000
 
-parser = argparse.ArgumentParser(description="Toy RISCV emulator by Python.")
-parser.add_argument('file', help="Binary file to load")
-parser.add_argument('-c', '--cycle', default=DefaultCycle, help="Number of emulation cycles.")
+configs = None
+with open(CONFIG_PATH, "r") as f:
+    configs = json.load(f)
 
-args = parser.parse_args()
+failure_count = 0
+for config in configs:
+    path = os.path.join(BINARY_DIR_PATH, f"{config}.bin")
+    try:
+        print(f"{path}")
+        rafi.run_emulation(path, MAX_CYCLE)
+    except Exception as e:
+        print(e)
+        failure_count += 1
 
-rafi.run_emulation(args.file, args.cycle)
+sys.exit(failure_count)

@@ -14,7 +14,7 @@
 
 from . import emu
 
-def run_emulation(args):
+def run_emulation(path, max_cycle):
     emulator = emu.Emulator()
-    emulator.load(args.file)
-    emulator.run(args.cycle)
+    emulator.load(path)
+    emulator.run(max_cycle)

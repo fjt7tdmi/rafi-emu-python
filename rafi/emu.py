@@ -267,7 +267,7 @@ class Processor:
 
         # decode
         op = decode(insn)
-        print(f"{self.cpuState.pc:08x} {op}")
+        #print(f"{self.cpuState.pc:08x} {op}")
 
         # execute
         op.execute(self.cpuState, self.bus)

@@ -541,7 +541,7 @@ class SUB(Op):
 
     def execute(self, cpuState, bus):
         x = cpuState.int_reg
-        x[self.rd] = x[self.rs1] - x[self.rs2]
+        x[self.rd] = UInt32(x[self.rs1] - x[self.rs2])
 
 class SLL(Op):
     def __init__(self, rd, rs1, rs2):

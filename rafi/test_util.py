@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import util
+from . import util
 import unittest
 
 class TestUtil(unittest.TestCase):

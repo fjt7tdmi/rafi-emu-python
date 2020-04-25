@@ -330,19 +330,16 @@ class Emulator:
     def load(self, path):
         self.memory.load(path)
 
-    def print_host_io_value(self, value):
-        if value == 1:
-            print(f"HostIo: {value} (success)")
-        else:
-            print(f"HostIo: {value} (failure: testId={value // 2})")
-
     def run(self, maxCycle):
         for cycle in range(int(maxCycle)):
             self.processor.process_cycle()
 
             host_io_value = self.bus.read_uint32(self.HOST_IO_ADDR)
-            if host_io_value != 0:
-                self.print_host_io_value(host_io_value)
+            if host_io_value == 1:
+                print(f"HostIo: {host_io_value} (success)")
                 return
+            elif host_io_value != 0:
+                print(f"HostIo: {host_io_value} (failure: testId={host_io_value // 2})")
+                raise Exception(f"Host IO value is not 1.")
         
         raise Exception(f"Emulation hasn't finished within {maxCycle} cycles.")

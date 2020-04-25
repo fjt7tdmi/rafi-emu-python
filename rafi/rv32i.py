@@ -81,7 +81,7 @@ class JALR(Op):
         return f"jalr {rd},{imm}"
 
     def execute(self, cpuState, bus):
-        x = cpuState.int_reg[self.rd]
+        x = cpuState.int_reg
         next_pc = cpuState.next_pc
 
         cpuState.next_pc = x[self.rs1] + self.imm

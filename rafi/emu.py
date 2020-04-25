@@ -213,6 +213,40 @@ def decode(insn):
         raise Exception(f"Failed to decode insn 0x{insn:08x}")
 
 # =============================================================================
+# Bus
+#
+class Bus:
+    def __init__(self, memory):
+        self.memory = memory
+    
+    def get_memory_addr(self, addr):
+        return addr - 0x8000_0000
+
+    def read_uint8(self, addr):
+        memory_addr = self.get_memory_addr(addr)
+        return self.memory.read_uint8(memory_addr)
+
+    def read_uint16(self, addr):
+        memory_addr = self.get_memory_addr(addr)
+        return self.memory.read_uint16(memory_addr)
+
+    def read_uint32(self, addr):
+        memory_addr = self.get_memory_addr(addr)
+        return self.memory.read_uint32(memory_addr)
+
+    def write_uint8(self, addr, value):
+        memory_addr = self.get_memory_addr(addr)
+        self.memory.write_uint8(memory_addr, value)
+
+    def write_uint16(self, addr, value):
+        memory_addr = self.get_memory_addr(addr)
+        self.memory.write_uint16(memory_addr, value)
+
+    def write_uint32(self, addr, value):
+        memory_addr = self.get_memory_addr(addr)
+        self.memory.write_uint32(memory_addr, value)
+
+# =============================================================================
 # Processor
 #
 class Processor:
@@ -220,6 +254,7 @@ class Processor:
 
     def __init__(self, bus):
         self.bus = bus
+        self.cpuState.pc = 0x8000_0000
 
     def process_cycle(self):
         # fetch
@@ -281,13 +316,29 @@ class Processor:
 # Emulator
 #
 class Emulator:
+    HOST_IO_ADDR = 0x8000_1000
+
     def __init__(self):
         self.memory = mem.Memory()
-        self.processor = Processor(self.memory)
+        self.bus = Bus(self.memory)
+        self.processor = Processor(self.bus)
 
     def load(self, path):
         self.memory.load(path)
 
-    def run(self, cycle):
-        for i in range(int(cycle)):
+    def print_host_io_value(self, value):
+        if value == 1:
+            print(f"HostIo: {value} (success)")
+        else:
+            print(f"HostIo: {value} (failure: testId={value // 2})")
+
+    def run(self, maxCycle):
+        for cycle in range(int(maxCycle)):
             self.processor.process_cycle()
+
+            host_io_value = self.bus.read_uint32(self.HOST_IO_ADDR)
+            if host_io_value != 0:
+                self.print_host_io_value(host_io_value)
+                return
+        
+        raise Exception(f"Emulation hasn't finished within {maxCycle} cycles.")

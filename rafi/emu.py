@@ -256,6 +256,10 @@ class Processor:
         self.bus = bus
         self.cpuState.pc = 0x8000_0000
 
+    def dump_cpu_state(self):
+        for i in range(32):
+            print(f"{rv.INT_REG_NAMES[i]} {self.cpuState.int_reg[i]:08x}")
+
     def process_cycle(self):
         # fetch
         insn = self.bus.read_uint32(self.cpuState.pc)

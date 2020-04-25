@@ -27,25 +27,25 @@ class Memory:
             self.data[0:len(data)] = data[0:len(data)]
 
     def read_uint8(self, addr):
-        return int.from_bytes(self.data[addr:addr+1], byteorder='little', signed=False)
+        return int.from_bytes(self.data[addr:addr+1], byteorder='little')
 
     def read_uint16(self, addr):
-        return int.from_bytes(self.data[addr:addr+2], byteorder='little', signed=False)
+        return int.from_bytes(self.data[addr:addr+2], byteorder='little')
 
     def read_uint32(self, addr):
-        return int.from_bytes(self.data[addr:addr+4], byteorder='little', signed=False)
+        return int.from_bytes(self.data[addr:addr+4], byteorder='little')
 
     def write_uint8(self, addr, value):
-        x = value.to_bytes(byteorder='little', signed=False)
+        x = value.to_bytes(byteorder='little')
         for i in range(1):
             self.data[addr + i] = x[i]
 
     def write_uint16(self, addr, value):
-        x = value.to_bytes(byteorder='little', signed=False)
+        x = value.to_bytes(byteorder='little')
         for i in range(2):
             self.data[addr + i] = x[i]
 
     def write_uint32(self, addr, value):
-        x = value.to_bytes(byteorder='little', signed=False)
+        x = value.to_bytes(byteorder='little')
         for i in range(4):
             self.data[addr + i] = x[i]

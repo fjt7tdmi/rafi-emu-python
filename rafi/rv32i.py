@@ -557,7 +557,7 @@ class SLL(Op):
 
     def execute(self, cpuState, bus):
         x = cpuState.int_reg
-        x[self.rd] = x[self.rs1] << x[self.rs2]
+        x[self.rd] = x[self.rs1] << (x[self.rs2] & 0x1f)
 
 class SLT(Op):
     def __init__(self, rd, rs1, rs2):
@@ -621,7 +621,7 @@ class SRL(Op):
 
     def execute(self, cpuState, bus):
         x = cpuState.int_reg
-        x[self.rd] = x[self.rs1] >> x[self.rs2]
+        x[self.rd] = x[self.rs1] >> (x[self.rs2] & 0x1f)
 
 class SRA(Op):
     def __init__(self, rd, rs1, rs2):
@@ -637,7 +637,8 @@ class SRA(Op):
 
     def execute(self, cpuState, bus):
         x = cpuState.int_reg
-        x[self.rd] = UInt32(Int32(x[self.rs1]) >> Int32(x[self.rs2]))
+
+        x[self.rd] = UInt32(Int32(x[self.rs1]) >> (x[self.rs2] & 0x1f))
 
 class OR(Op):
     def __init__(self, rd, rs1, rs2):

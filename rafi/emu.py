@@ -169,7 +169,7 @@ def decode(insn):
             return rv32i.AND(r.rd, r.rs1, r.rs2)
         elif r.funct7 == 0b0100000 and r.funct3 == 0b000:
             return rv32i.SUB(r.rd, r.rs1, r.rs2)
-        elif r.funct7 == 0b0100000 and r.funct3 == 0b001:
+        elif r.funct7 == 0b0100000 and r.funct3 == 0b101:
             return rv32i.SRA(r.rd, r.rs1, r.rs2)
         else:
             raise Exception(f"Failed to decode insn 0x{insn:08x}")

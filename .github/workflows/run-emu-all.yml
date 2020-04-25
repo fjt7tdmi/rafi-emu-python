@@ -21,7 +21,7 @@ jobs:
       with:
         python-version: 3.8
     - name: checkout prebuilt binary
-      run: ./script/checkout_prebuilt_binary_for_ci.sh ${{ secrets.RAFI_PREBUILT_BINARY_USER }} ${{ secrets.RAFI_PREBUILT_BINARY_ACCESS_TOKEN }}
+      run: ./checkout_prebuilt_binary_for_ci.sh ${{ secrets.RAFI_PREBUILT_BINARY_USER }} ${{ secrets.RAFI_PREBUILT_BINARY_ACCESS_TOKEN }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

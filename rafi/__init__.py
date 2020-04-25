@@ -13,38 +13,10 @@
 # limitations under the License.
 
 from fixedint import *
-
+from . import cpu
 from . import mem
 from . import rv32i
 from . import util
-
-# =============================================================================
-# CPU State
-#
-class IntReg32:
-    __values = [UInt32(0)] * 32
-
-    def __getitem__(self, key):
-        return self.__values[int(key)]
-
-    def __setitem__(self, key, value):
-        if int(key) != 0:
-            self.__values[int(key)] = value
-
-class Csr32:
-    __values = [UInt32(0)] * 0x1000
-
-    def __getitem__(self, key):
-        return self.__values[int(key)]
-
-    def __setitem__(self, key, value):
-        self.__values[int(key)] = value
-
-class CpuState:
-    pc = UInt32(0)
-    next_pc = UInt32(0)
-    int_reg = IntReg32()
-    csr = Csr32()
 
 # =============================================================================
 # Decoder
@@ -241,18 +213,76 @@ def decode(insn):
         raise Exception(f"Failed to decode insn 0x{insn:08x}")
 
 # =============================================================================
-# Emulator
+# Processor
 #
 
+class Processor:
+    cpuState = cpu.CpuState()
+
+    def __init__(self, bus):
+        self.bus = bus
+
+    def process_cycle(self):
+        # fetch
+        insn = self.bus.read_uint32(self.cpuState.pc)
+        self.cpuState.next_pc = self.cpuState.pc + 4
+
+        # decode
+        op = decode(insn)
+        print(f"{self.cpuState.pc:08x} {op}")
+
+        # execute
+        op.execute(self.cpuState, self.bus)
+        trap = op.post_check_trap(self.cpuState)
+        if trap is not None:
+            self.process_trap(trap)
+
+        # finalize
+        self.cpuState.pc = self.cpuState.next_pc
+    
+    def process_trap(self, trap):
+        if trap.trapType == cpu.TrapType.EXCEPTION:
+            self.process_exception(trap)
+        elif trap.trapType == cpu.TrapType.RETURN:
+            self.process_trap_return(trap)
+        else:
+            raise Exception("Not implemented.")
+
+    def process_exception(self, trap):
+        mtvec = rv.MTVEC(self.read_csr(rv.CsrAddr.MTVEC))
+        mstatus = rv.MSTATUS(self.read_csr(rv.CsrAddr.MSTATUS))
+
+        mstatus.set_MPIE(mstatus.get_MIE())
+        mstatus.set_MIE(UInt32(0))
+        mstatus.set_MPP(UInt32(3)) # priv M
+
+        self.write_csr(rv.CsrAddr.MSTATUS, mstatus.value)
+        self.write_csr(rv.CsrAddr.MCAUSE, UInt32(trap.cause))
+        self.write_csr(rv.CsrAddr.MEPC, UInt32(trap.pc))
+        self.write_csr(rv.CsrAddr.MTVAL, UInt32(trap.trapValue))
+        self.cpuState.next_pc = mtvec.get_BASE() * 4
+
+    def process_trap_return(self, trap):
+        mstatus = rv.MSTATUS(self.read_csr(rv.CsrAddr.MSTATUS))
+        mepc = self.read_csr(rv.CsrAddr.MEPC)
+
+        mstatus.set_MPP(UInt32(0))
+        mstatus.set_MIE(mstatus.get_MPIE())
+
+        self.write_csr(rv.CsrAddr.MSTATUS, mstatus.value)
+        self.cpuState.next_pc = mepc
+
+    def read_csr(self, csrAddr):
+        return self.cpuState.csr[csrAddr.value]
+
+    def write_csr(self, csrAddr, value):
+        self.cpuState.csr[csrAddr.value] = value
+
 def run_emulation(args):
-    cpuState = CpuState()
     memory = mem.Memory()
     memory.load(args.file)
 
+    processor = Processor(memory)
+
     for cycle in range(int(args.cycle)):
-        insn = memory.read_uint32(cpuState.pc)
-        cpuState.next_pc = cpuState.pc + 4
-        op = decode(insn)
-        print(f"{cpuState.pc:08x} {op}")
-        op.execute(cpuState, memory)
-        cpuState.pc = cpuState.next_pc
+        processor.process_cycle()

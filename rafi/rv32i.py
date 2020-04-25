@@ -13,11 +13,16 @@
 # limitations under the License.
 
 from fixedint import *
+from . import rv
 from . import util
+from . import cpu
 
 class Op:
     def execute(self, cpuState, bus):
         pass
+
+    def post_check_trap(self, cpuState):
+        return None
 
 class LUI(Op):
     def __init__(self, rd, imm):
@@ -25,7 +30,7 @@ class LUI(Op):
         self.imm = imm
 
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
+        rd = rv.INT_REG_NAMES[self.rd]
         imm = self.imm
         return f"lui {rd},{imm}"
 
@@ -39,7 +44,7 @@ class AUIPC(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
+        rd = rv.INT_REG_NAMES[self.rd]
         imm = self.imm
         return f"auipc {rd},{imm}"
 
@@ -53,7 +58,7 @@ class JAL(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
+        rd = rv.INT_REG_NAMES[self.rd]
         imm = self.imm
         return f"jal {rd},{imm}"
     
@@ -71,7 +76,7 @@ class JALR(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
+        rd = rv.INT_REG_NAMES[self.rd]
         imm = self.imm
         return f"jalr {rd},{imm}"
 
@@ -89,8 +94,8 @@ class BEQ(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         if self.rs1 == 0:
             return f"beqz {rs2}, #{imm}"
@@ -112,8 +117,8 @@ class BNE(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         if self.rs1 == 0:
             return f"bnez {rs2}, #{imm}"
@@ -135,8 +140,8 @@ class BLT(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         if self.rs1 == 0:
             return f"bltz {rs2}, #{imm}"
@@ -158,8 +163,8 @@ class BGE(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         if self.rs1 == 0:
             return f"bgez {rs2}, #{imm}"
@@ -181,8 +186,8 @@ class BLTU(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         return f"bltu {rs1}, {rs2}, #{imm}"
 
@@ -199,8 +204,8 @@ class BGEU(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         return f"bgeu {rs1}, {rs2}, #{imm}"
 
@@ -217,8 +222,8 @@ class LB(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"lb {rd},{imm}({rs1})"
 
@@ -236,8 +241,8 @@ class LH(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"lh {rd},{imm}({rs1})"
 
@@ -255,8 +260,8 @@ class LW(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"lw {rd},{imm}({rs1})"
 
@@ -274,8 +279,8 @@ class LBU(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"lbu {rd},{imm}({rs1})"
 
@@ -293,8 +298,8 @@ class LHU(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"lhu {rd},{imm}({rs1})"
 
@@ -312,8 +317,8 @@ class SB(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         return f"sb {rs2},{imm}({rs1})"
 
@@ -331,8 +336,8 @@ class SH(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         return f"sh {rs2},{imm}({rs1})"
 
@@ -350,8 +355,8 @@ class SW(Op):
         self.imm = imm
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         imm = self.imm
         return f"sw {rs2},{imm}({rs1})"
 
@@ -369,8 +374,8 @@ class ADDI(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"addi {rd},{rs1},{imm}"
 
@@ -385,8 +390,8 @@ class SLTI(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"slti {rd},{rs1},{imm}"
 
@@ -401,8 +406,8 @@ class SLTIU(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"slti {rd},{rs1},{imm}"
 
@@ -417,8 +422,8 @@ class XORI(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"xori {rd},{rs1},{imm}"
 
@@ -433,8 +438,8 @@ class ORI(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"ori {rd},{rs1},{imm}"
 
@@ -449,8 +454,8 @@ class ANDI(Op):
         self.imm = imm
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         imm = self.imm
         return f"andi {rd},{rs1},{imm}"
 
@@ -465,8 +470,8 @@ class SLLI(Op):
         self.shamt = shamt
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         shamt = self.shamt
         return f"slli {rd},{rs1},0x{shamt:x}"
 
@@ -481,8 +486,8 @@ class SRLI(Op):
         self.shamt = shamt
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         shamt = self.shamt
         return f"srli {rd},{rs1},0x{shamt:x}"
 
@@ -497,8 +502,8 @@ class SRAI(Op):
         self.shamt = shamt
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         shamt = self.shamt
         return f"srai {rd},{rs1},0x{shamt:x}"
 
@@ -513,9 +518,9 @@ class ADD(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"add {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -529,9 +534,9 @@ class SUB(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"sub {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -545,9 +550,9 @@ class SLL(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"sll {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -561,9 +566,9 @@ class SLT(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"slt {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -577,9 +582,9 @@ class SLTU(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"sltu {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -593,9 +598,9 @@ class XOR(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"xor {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -609,9 +614,9 @@ class SRL(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"srl {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -625,9 +630,9 @@ class SRA(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"sra {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -641,9 +646,9 @@ class OR(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"or {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -657,9 +662,9 @@ class AND(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"and {rd},{rs1},{rs2}"
 
     def execute(self, cpuState, bus):
@@ -682,9 +687,15 @@ class ECALL(Op):
     def __str__(self):
         return "ecall"
 
+    def post_check_trap(self, cpuState):
+        return cpu.EnvironmentCallFromMachineException(cpuState.pc)
+
 class EBREAK(Op):
     def __str__(self):
         return "ebreak"
+
+    def post_check_trap(self, cpuState):
+        return cpu.BreakpointException(cpuState.pc)
 
 class CSRRW(Op):
     def __init__(self, csr, rd, rs1):
@@ -693,9 +704,9 @@ class CSRRW(Op):
         self.rs1 = rs1
     
     def __str__(self):
-        csr = util.CSR_NAMES[self.csr]
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        csr = rv.CSR_NAMES[self.csr]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         if rd == 0:
             return f"csrw {csr},{rs1}"
         else:
@@ -716,9 +727,9 @@ class CSRRS(Op):
         self.rs1 = rs1
     
     def __str__(self):
-        csr = util.CSR_NAMES[self.csr]
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        csr = rv.CSR_NAMES[self.csr]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         if rs1 == 0:
             return f"csrr {rd},{csr}"
         elif rd == 0:
@@ -741,9 +752,9 @@ class CSRRC(Op):
         self.rs1 = rs1
     
     def __str__(self):
-        csr = util.CSR_NAMES[self.csr]
-        rd = util.INT_REG_NAMES[self.rd]
-        rs1 = util.INT_REG_NAMES[self.rs1]
+        csr = rv.CSR_NAMES[self.csr]
+        rd = rv.INT_REG_NAMES[self.rd]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
         if rd == 0:
             return f"csrc {csr},{rs1}"
         else:
@@ -763,8 +774,8 @@ class CSRRWI(Op):
         self.zimm = zimm
     
     def __str__(self):
-        csr = util.CSR_NAMES[self.csr]
-        rd = util.INT_REG_NAMES[self.rd]
+        csr = rv.CSR_NAMES[self.csr]
+        rd = rv.INT_REG_NAMES[self.rd]
         zimm = self.zimm
         if rd == 0:
             return f"csrwi {csr},{zimm}"
@@ -786,8 +797,8 @@ class CSRRSI(Op):
         self.zimm = zimm
     
     def __str__(self):
-        csr = util.CSR_NAMES[self.csr]
-        rd = util.INT_REG_NAMES[self.rd]
+        csr = rv.CSR_NAMES[self.csr]
+        rd = rv.INT_REG_NAMES[self.rd]
         zimm = self.zimm
         if rd == 0:
             return f"csrsi {csr},{zimm}"
@@ -809,8 +820,8 @@ class CSRRCI(Op):
         self.zimm = zimm
     
     def __str__(self):
-        csr = util.CSR_NAMES[self.csr]
-        rd = util.INT_REG_NAMES[self.rd]
+        csr = rv.CSR_NAMES[self.csr]
+        rd = rv.INT_REG_NAMES[self.rd]
         zimm = self.zimm
         if rd == 0:
             return f"csrci {csr},{zimm}"
@@ -829,9 +840,15 @@ class URET(Op):
     def __str__(self):
         return "uret"
 
+    def post_check_trap(self, cpuState):
+        return cpu.TrapReturn(cpuState.pc)
+
 class SRET(Op):
     def __str__(self):
         return "sret"
+
+    def post_check_trap(self, cpuState):
+        return cpu.TrapReturn(cpuState.pc)
 
 class MRET(Op):
     def __str__(self):
@@ -847,6 +864,6 @@ class SFENCE_VMA(Op):
         self.rs2 = rs2
     
     def __str__(self):
-        rs1 = util.INT_REG_NAMES[self.rs1]
-        rs2 = util.INT_REG_NAMES[self.rs2]
+        rs1 = rv.INT_REG_NAMES[self.rs1]
+        rs2 = rv.INT_REG_NAMES[self.rs2]
         return f"sfence.vma {rs1},{rs2}"
